@@ -1,0 +1,40 @@
+---
+title: "Utiliser une instance Postgres avec R"
+output: learnr::tutorial
+---
+
+```{r setup, include=FALSE}
+library(learnr)
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+## Objectif du tutoriel
+
+Ce tutoriel illustre la connexion depuis `R` à une instance Postgres qui contient les données du Recensement de Population 2016, disponibles sur le [site de l'Insee](https://www.insee.fr/fr/statistiques/4171558). L'instance en question a été déployée sur la plateforme Onyxia du SSPCloud, et n'est accessible que depuis cette plateforme.
+
+On montera quelques usages que l'on peut faire à partir de cette instance et en quoi combiner `R` et Postgres est utile.
+
+## Pourquoi utiliser une base de données
+
+Les données du Recensement de Population sont assez volumineuses ; pour les données de 2016, elles représentent environ 63 Go. Il est par conséquent illusoire de vouloir travailler avec l'ensemble de ces données chargées simultanément en mémoire avec `R`. La seule table `logement` contient 25 millions de lignes et peut déjà représenter une difficulté pour certaines machines. Ces contraintes d'espace tombent avec un système de base de données. 
+
+## Comment utiliser une base de données avec `R`
+
+### Se connecter à la base Postgres
+
+https://spyrales.sspcloud.fr/my-lab/catalogue/inseefrlab-datascience/rstudio/deploiement?service.cpus=2.1&service.mem=4096&onyxia.friendlyName=rstudio-rp&script.uri=https://minio.lab.sspcloud.fr/pierrelamarche/rstudio_connect_rp.sh
+
+
+This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
+
+Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Ctrl+Shift+Enter*. 
+
+```{r}
+plot(cars)
+```
+
+Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Ctrl+Alt+I*.
+
+When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Ctrl+Shift+K* to preview the HTML file).
+
+The preview shows you a rendered HTML copy of the contents of the editor. Consequently, unlike *Knit*, *Preview* does not run any R code chunks. Instead, the output of the chunk when it was last run in the editor is displayed.
