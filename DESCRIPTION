@@ -7,8 +7,8 @@ Authors@R:
            family = "Lamarche",
            role = c("aut", "cre"),
            email = "pierre.lamarche@insee.fr")
-Description: What the package does (one paragraph).
-License: What license it uses
+Description: Tutoriel en Shiny sur l'utilisation d'une base de données Postgres en R.
+License: MIT + file
 Encoding: UTF-8
 LazyData: true
 Imports:
