@@ -1,6 +1,5 @@
 Package: postgres.with.r
 Title: Utilisation d'une base de données Postgres avec `R`
-Type: Book
 Version: 0.0.0.9000
 Authors@R: 
     person(given = "Pierre",
@@ -8,8 +7,7 @@ Authors@R:
            role = c("aut", "cre"),
            email = "pierre.lamarche@insee.fr")
 Description: Tutoriel en Shiny sur l'utilisation d'une base de données Postgres en R.
-License: MIT + file
+License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
-Imports:
-  learnr
+Imports: rmarkdown
