@@ -2,11 +2,17 @@
 title: "Tutoriel : utiliser une instance Postgres avec R"
 author: "Pierre Lamarche"
 date: "01/06/2020"
-output: html_document
+output: 
+  html_document
+  learnr::tutorial:
+    progressive: true
+    allow_skip: false
 runtime: shiny
 ---
 
 ```{r setup, include=FALSE}
+library(knitr)
+library(learnr)
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
@@ -24,6 +30,21 @@ Les données du Recensement de Population sont assez volumineuses ; pour les don
 
 ### Se connecter à la base Postgres
 
+Comme indiqué dans la [documentation UtilitR](https://linogaliana.gitlab.io/documentationR/se-connecter-%C3%A0-une-base-de-donn%C3%A9es.html#se-connecter-%C3%A0-une-base-de-donn%C3%A9es-1), il est possible d'utiliser différents *packages* pour se connecter à la base de données. Quelle que soit la solution utilisée, il faut disposer de cinq paramètres pour générer la connexion à la base de données :
+
+* l'URL de la base de données, que l'on peut décrire comme l'adresse du serveur contenant la base de données ;
+* le port de la base de données, une sorte de complément à l'adresse ;
+* le nom de la base de données ;
+* l'identifiant de connexion (souvent l'Idep, mais parfois autre chose), soit l'identité de la personne qui se connecte ;
+* le mot de passe associé à l'identifiant.
+
+Dans l'exemple qui nous intéresse, l'URL de la base de données est la suivante : 
+```{r, echo = FALSE}
+Sys.getenv("PGRP_HOST")
+```
+Le nom de la base de données est `rp`, le port `5432`. On se connecte avec un identifiant générique d'utilisateur, `user_read`. Cet identifiant a été créé pour permettre à tous ceux qui souhaitent se connecter à la base de données de le faire, sans toutefois leur permettre de modifier la base en question ; c'est pour cette raison qu'on parle *d'accès en lecture*. Le mot de passe, lui aussi partagé, est le suivant : `RP2016Insee`.
+
+On va donc créer un objet `connexion` pour se connecter à la base de données, en utilisant les informations décrites ci-dessus, et en utilisant la fonction `dbConnect` du *package* `RPostgres`.
 
 To learn more, see [Interactive Documents](http://rmarkdown.rstudio.com/authoring_shiny.html).
 
