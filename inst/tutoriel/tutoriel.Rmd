@@ -1,10 +1,10 @@
 ---
 title: "Tutoriel : utiliser une instance Postgres avec R"
-author: "Pierre Lamarche"
-date: "01/06/2020"
 output: 
-  html_document
-runtime: shiny
+  learnr::tutorial:
+    progressive: true
+    allow_skip: true
+runtime: shiny_prerendered
 ---
 
 ```{r setup, include=FALSE}
@@ -41,20 +41,25 @@ Sys.getenv("PGRP_HOST")
 ```
 Le nom de la base de données est `rp`, le port `5432`. On se connecte avec un identifiant générique d'utilisateur, `user_read`. Cet identifiant a été créé pour permettre à tous ceux qui souhaitent se connecter à la base de données de le faire, sans toutefois leur permettre de modifier la base en question ; c'est pour cette raison qu'on parle *d'accès en lecture*. Le mot de passe, lui aussi partagé, est le suivant : `RP2016Insee`.
 
-On va donc créer un objet `connexion` pour se connecter à la base de données, en utilisant les informations décrites ci-dessus, et en utilisant la fonction `dbConnect` du *package* `RPostgres`. En utilisant le _package_ `RPostgres`, la connexion se fait de la manière suivante :
+On va donc créer un objet `connexion` pour se connecter à la base de données, en utilisant les informations décrites ci-dessus, et en utilisant la fonction `dbConnect` du *package* `RPostgres`. C'est au travers de cet objet `connexion` qu'on va passer pour toutes les requêtes que l'on souhaite soumettre à la base de données. En utilisant le _package_ `RPostgres`, la connexion se fait de la manière suivante :
 
-```{r, collapse = TRUE}
+```{r connexion, exercise = TRUE}
 ### création d'un objet connexion
 library(DBI)
 connexion <- dbConnect(RPostgres::Postgres(),
-                       host = Sys.getenv("PGRP_HOST"),
+                       host = "192.168.1.24",
                        dbname = "rp",
                        port = 5432,
                        user = "user_read",
-                       password = rstudioapi::askForPassword("Tapez le mot de passe :"))
+                       password = "RP2016Insee")
+
+### lister les tables du schéma rp2016
+dbGetQuery(connexion, "select tablename from pg_catalog.pg_tables where schemaname = 'rp2016'")
 ```
 Dans l'usage courant, il est fortement déconseillé d'inscrire "en dur" les identifiants de connexion tels que le mot de passe ou même l'identifiant. Utiliser des fonctions telles que `rstudio::askForPassword` permet un usage interactif du code, sans dévoiler des éléments confidentiels tels que les identifiants de connexion.
 
+### Visualiser la base de données
 
+Sous RStudio, il est possible de visualiser la structure 
 
 
