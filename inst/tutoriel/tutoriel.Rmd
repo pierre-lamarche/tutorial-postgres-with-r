@@ -60,6 +60,5 @@ Dans l'usage courant, il est fortement déconseillé d'inscrire "en dur" les ide
 
 ### Visualiser la base de données
 
-Sous RStudio, il est possible de visualiser la structure 
-
+Sous RStudio, il est possible de visualiser la structure de la base de données à laquelle on est connecté dans l'onglet `Connections` dans le panneau en haut à droite de l'écran. 
 
