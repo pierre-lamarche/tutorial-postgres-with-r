@@ -140,7 +140,7 @@ $(document).ready(function () {
 <p>Dans l’exemple qui nous intéresse, l’URL de la base de données est la suivante :</p>
 <pre><code>## [1] &quot;&quot;</code></pre>
 <p>Le nom de la base de données est <code>rp</code>, le port <code>5432</code>. On se connecte avec un identifiant générique d’utilisateur, <code>user_read</code>. Cet identifiant a été créé pour permettre à tous ceux qui souhaitent se connecter à la base de données de le faire, sans toutefois leur permettre de modifier la base en question ; c’est pour cette raison qu’on parle <em>d’accès en lecture</em>. Le mot de passe, lui aussi partagé, est le suivant : <code>RP2016Insee</code>.</p>
-<p>On va donc créer un objet <code>connexion</code> pour se connecter à la base de données, en utilisant les informations décrites ci-dessus, et en utilisant la fonction <code>dbConnect</code> du <em>package</em> <code>RPostgres</code>. En utilisant le <em>package</em> <code>RPostgres</code>, la connexion se fait de la manière suivante :</p>
+<p>On va donc créer un objet <code>connexion</code> pour se connecter à la base de données, en utilisant les informations décrites ci-dessus, et en utilisant la fonction <code>dbConnect</code> du <em>package</em> <code>RPostgres</code>. C’est au travers de cet objet <code>connexion</code> qu’on va passer pour toutes les requêtes que l’on souhaite soumettre à la base de données. En utilisant le <em>package</em> <code>RPostgres</code>, la connexion se fait de la manière suivante :</p>
 <div class="tutorial-exercise" data-label="connexion" data-caption="Code" data-completion="1" data-diagnostics="1" data-startover="1" data-lines="0">
 <pre class="text"><code>### création d&#39;un objet connexion
 library(DBI)
@@ -156,6 +156,11 @@ dbGetQuery(connexion, &quot;select tablename from pg_catalog.pg_tables where sch
 <script type="application/json" data-opts-chunk="1">{"fig.width":6.5,"fig.height":4,"fig.retina":2,"fig.align":"default","fig.keep":"high","fig.show":"asis","out.width":624,"warning":true,"error":false,"message":true,"exercise.df_print":"paged","exercise.checker":"NULL"}</script>
 </div>
 <p>Dans l’usage courant, il est fortement déconseillé d’inscrire “en dur” les identifiants de connexion tels que le mot de passe ou même l’identifiant. Utiliser des fonctions telles que <code>rstudio::askForPassword</code> permet un usage interactif du code, sans dévoiler des éléments confidentiels tels que les identifiants de connexion.</p>
+</div>
+<div id="section-visualiser-la-base-de-données" class="section level3">
+<h3>Visualiser la base de données</h3>
+<p>Sous RStudio, il est possible de visualiser la structure de la base de données à laquelle on est connecté dans l’onglet <code>Connections</code> dans le panneau en haut à droite de l’écran.</p>
+<p><img src="img/screenshot_connections_pane.png" title="Vue de l&#39;onglet Connections actif dans RStudio" /></p>
 
 <script type="application/shiny-prerendered" data-context="server-start">
 library(knitr)
