@@ -62,5 +62,79 @@ Dans l'usage courant, il est fortement déconseillé d'inscrire "en dur" les ide
 
 Sous RStudio, il est possible de visualiser la structure de la base de données à laquelle on est connecté dans l'onglet `Connections` dans le panneau en haut à droite de l'écran.
 
-![](img/screenshot_connections_pane.png "Vue de l'onglet Connections actif dans RStudio")
+```{r screenshot1, fig.cap = '', echo = FALSE, out.width = '80%'}
+knitr::include_graphics("images/screenshot_connections_pane.png")
+```
 
+Pour cela, deux solutions :
+
+* soit utiliser le _package_ `odbc` disponible sur le CRAN, mais qui nécessite l'installation de librairies sytème ;
+* soit utiliser le _package `RPostgresInsee` que l'on peut installer avec la commande `remotes::install_github("pierre-lamarche/RPostgresInsee")`.
+
+Dans le premier cas, le code pour créer la connexion avec la base de données se présente comme suit :
+
+```{r odbc, collapse=FALSE, eval = FALSE}
+library(DBI)
+connexion <- dbConnect(odbc::odbc(),
+                       driver = "Postgres Unicode",
+                       server = "192.168.1.24",
+                       database = "rp",
+                       port = 5432,
+                       uid = "user_read",
+                       pwd = "RP2016Insee")
+```
+
+Dans le second cas, la syntaxe est légèrement différente (mais très proche de celle utilisée pour le _package_ `RPostgres`) :
+
+```{r postgresinsee, collapse=FALSE, eval = FALSE}
+library(DBI)
+connexion <- dbConnect(RPostgresInsee::Postgres(),
+                       host = "192.168.1.24",
+                       dbname = "rp",
+                       port = 5432,
+                       user = "user_read",
+                       password = "RP2016Insee")
+```
+
+## Réaliser des requêtes dans la base de données
+
+Pour soumettre des requêtes sur la base de données à partir de `R` une fois la connexion établie, il existe deux solutions :
+
+* utiliser le langage SQL, qui est le langage propre aux bases de données. Les fonctions `dbSendQuery` et `dbGetQuery` ;
+* utiliser le _package_ `dbplyr`, qui permet de recourir à une syntaxe très similaire à celle de `tidyverse`.
+
+### En langage SQL
+
+À partir du _package_ `DBI`, il est possible de soumettre des requêtes SQL sur la base de données en utilisant deux fonctions de ce _package_, la fonction `dbSendQuery` pour laquelle on soumet une requête sans en récupérer le résultat, et la fonction `dbGetQuery` pour laquelle on récupère le résultat.
+
+Ainsi, par exemple, sur les données du RP, on peut créer une table intermédiaire - stockée dans le base de données - pour laquelle on crée une indicatrice pour chaque logement sur le fait d'être une résidence principale ou non. Puis on récupère en mémoire le nombre de résidences principales par département.
+
+```{r res_princ, exercise = TRUE}
+library(DBI)
+connexion <- dbConnect(RPostgres::Postgres(),
+                       host = "192.168.1.24",
+                       dbname = "rp",
+                       port = 5432,
+                       user = "user_read",
+                       password = "RP2016Insee")
+
+### création d'une table temporaire avec une indicatrice résidence principale par logement
+dbSendQuery(connexion, "create temp table res_princ as
+            select substr(commune, 1, 2) as departement, case 
+              when catl = '1' then 0
+              else 0
+            end as res_princ
+            from rp2016.logement")
+### récupération de la somme par département de l'indicatrice
+compte_rp <- dbGetQuery(connexion, "select distinct departement, sum(res_princ) as nb_res_princ 
+                        from res_princ group by departement")
+compte_rp
+```
+
+### Le package `dbplyr`
+
+
+
+### Exercice bonus
+
+Il faut éviter autant que possible de récupérer les données volumineuses disponibles dans la base de données et de les charger en mémoire de `R`. Les traitements doivent être prioritairement réalisés 
