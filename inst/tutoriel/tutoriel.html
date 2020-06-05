@@ -208,7 +208,7 @@ connexion &lt;- dbConnect(RPostgres::Postgres(),
 ### création d&#39;une table temporaire avec une indicatrice résidence principale par logement
 dbSendQuery(connexion, &quot;create temp table res_princ as
             select substr(commune, 1, 2) as departement, case 
-              when catl = &#39;1&#39; then 0
+              when catl = &#39;1&#39; then 1
               else 0
             end as res_princ
             from rp2016.logement&quot;)
