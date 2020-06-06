@@ -133,7 +133,60 @@ compte_rp
 
 ### Le package `dbplyr`
 
+Le _package_ permet à l'utilisateur familier de la syntaxe `tidyverse` d'envoyer des requêtes vers la base de données en adoptant cette syntaxe, qui est ensuite traduite par le programme en requête SQL. Ainsi, pour réaliser la même opération que précédemment, voici comment on peut procéder avec le _package_ en question :
 
+```{r res_pinc2, exercise = TRUE}
+library(DBI)
+library(dplyr)
+library(dbplyr)
+connexion <- dbConnect(RPostgres::Postgres(),
+                       host = "192.168.1.24",
+                       dbname = "rp",
+                       port = 5432,
+                       user = "user_read",
+                       password = "RP2016Insee")
+
+### repérer la table logement dans le schéma rp2016
+logement <- tbl(connexion, in_schema("rp2016", "logement"))
+
+### création d'une table temporaire avec une indicatrice résidence principale par logement
+res_princ <- logement %>%
+  mutate(departement = substr(commune, 1, 2),
+         res_princ = ifelse(catl == '1', 1, 0)) %>%
+  select(departement, res_princ) %>%
+  compute()
+### récupération de la somme par département de l'indicatrice
+compte_rp <- res_princ %>%
+  group_by(departement) %>%
+  summarise(nb_res_princ = sum(res_princ)) %>%
+  collect()
+compte_rp
+```
+
+Dans `dbplyr`, la commande `collect()` permet de récupérer en mémoire le résultat de la collecte, et s'apparente donc à `dbGetQuery` dans `DBI`. Il est également intéressant de noter qu'il est possible de visualiser sur la fonction `show_query` qui permet de visualiser l'interpréation de la commande en requête SQL. Pour rentrer dans la mécanique SQL, l'utilisateur familier de la syntaxe `tidyverse` pourra s'appuyer sur la fonction `translate_sql` qui permet de traduire en SQL la syntaxe `tidyverse`.
+
+```{r show_query, warning = FALSE, message = FALSE, exercise = TRUE}
+library(DBI)
+library(dplyr)
+library(dbplyr)
+connexion <- dbConnect(RPostgres::Postgres(),
+                       host = "192.168.1.24",
+                       dbname = "rp",
+                       port = 5432,
+                       user = "user_read",
+                       password = "RP2016Insee")
+
+### repérer la table logement dans le schéma rp2016
+logement <- tbl(connexion, in_schema("rp2016", "logement"))
+
+### création d'une table temporaire avec une indicatrice résidence principale par logement
+res_princ <- logement %>%
+  mutate(departement = substr(commune, 1, 2),
+         res_princ = ifelse(catl == '1', 1, 0)) %>%
+  select(departement, res_princ) %>%
+  show_query()
+
+```
 
 ### Exercice bonus
 
