@@ -21,7 +21,7 @@ On montera quelques usages que l'on peut faire à partir de cette instance et en
 
 ## Pourquoi utiliser une base de données
 
-Les données du Recensement de Population sont assez volumineuses ; pour les données de 2016, elles représentent environ 63 Go. Il est par conséquent illusoire de vouloir travailler avec l'ensemble de ces données chargées simultanément en mémoire avec `R`. La seule table `logement` contient 25 millions de lignes et peut déjà représenter une difficulté pour certaines machines. Ces contraintes d'espace tombent avec un système de base de données. 
+Les données du Recensement de Population sont assez volumineuses ; pour les données de 2016, elles représentent environ 92 Go (_cf._ exercice bonus). Il est par conséquent illusoire de vouloir travailler avec l'ensemble de ces données chargées simultanément en mémoire avec `R`. La seule table `logement` contient 25 millions de lignes et peut déjà représenter une difficulté pour certaines machines. Ces contraintes d'espace tombent avec un système de base de données. 
 
 ## Comment utiliser une base de données avec `R`
 
@@ -190,4 +190,32 @@ res_princ <- logement %>%
 
 ### Exercice bonus
 
-Il faut éviter autant que possible de récupérer les données volumineuses disponibles dans la base de données et de les charger en mémoire de `R`. Les traitements doivent être prioritairement réalisés 
+Il faut éviter autant que possible de récupérer les données volumineuses disponibles dans la base de données et de les charger en mémoire de `R`. Les traitements doivent être prioritairement réalisés sur la base de données, en cherchant à charger le minimum de données nécessaire en mémoire. Pour illustrer cette nécessité, on se propose dans ce qui suit d'estimer le volume total des données du Recensement de Population une fois chargées en mémoire, pour se faire une idée de ce que cela représente comme exigence pour la machine.
+
+Pour cela, on va se contenter de charger en mémoire un fragment de chaque table du schéma `rp2016` (une centaine de lignes) dont on va mesurer la taille en mémoire grâce à la fonction [`object.size`](https://www.rdocumentation.org/packages/utils/versions/3.6.2/topics/object.size) de `R`. Dans le même temps, on va collecter pour chaque table le nombre de lignes total, ce qui permettra ensuite d'inférer la taille totale de chaque table une fois celle-ci chargée en mémoire.
+
+```{r compute_size, exercise = TRUE}
+library(DBI)
+connexion <- dbConnect(RPostgres::Postgres(),
+                       host = "192.168.1.24",
+                       dbname = "rp",
+                       port = 5432,
+                       user = "user_read",
+                       password = "RP2016Insee",
+                       bigint = "integer") ### récupérer du integer plutôt que integer64 pour le nombre de lignes
+### lister toutes les tables
+listeTables <- dbGetQuery(connexion, "select tablename from pg_catalog.pg_tables where schemaname = 'rp2016'")[, 1]
+### on récupère pour chaque table la taille et les 100 premières lignes dont on mesure la taille une fois chargées en mémoire
+taille <- lapply(listeTables, function(x) {
+  sampTab <- dbGetQuery(connexion, paste0("select * from rp2016.", x, " limit 100"))
+  nbLignes <- dbGetQuery(connexion, paste0("select count(*) from rp2016.", x))
+  return(list(taille = object.size(sampTab), nbLignes = nbLignes[1, 1]))
+})
+### on infére la taille de chaque table
+taille_totale <- lapply(taille, function(x) x$taille/100*x$nbLignes)
+### on calcule la taille totale
+print(Reduce('+', taille_totale), units = "Gb")
+### ou plus simple - sans passer par la fonction Reduce mais on perd les propriétés de l'objet object.size
+sum(unlist(taille_totale))/(1024**3)
+dbDisconnect(connexion)
+```
