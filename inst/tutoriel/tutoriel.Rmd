@@ -219,3 +219,42 @@ print(Reduce('+', taille_totale), units = "Gb")
 sum(unlist(taille_totale))/(1024**3)
 dbDisconnect(connexion)
 ```
+
+## Un cas pratique : cartographier les données du Recensement de Population
+
+On va maintenant réaliser une application concrête d'usage des données du Recensement de Population, en cartographiant au niveau communal le taux de logements vacants. Pour cela, nous allons calculer ce taux au niveau communal dans la base de données, récupérer le résultat et réaliser la cartographie dans `R`.
+
+### Calcul du taux de logements vacants
+
+Pour repérer les logements vacants dans la table `logement`, en consultant la [documentation](https://www.insee.fr/fr/statistiques/fichier/4229099/dictionnaire_logemt_rp2016.pdf) mise à disposition sur le site de l'Insee, il faut se baser sur la variable `catl` qui prend les valeurs suivantes :
+
+* `1` : résidence principale
+* `2` : logement occasionnel
+* `3` : résidence secondaire
+* `4` : logement vacant
+* `Z` : hors logement ordinaire
+
+On va en conséquence calculer deux variables : le nombre de logements ordinaires et le nombre de logements vacants, et en calculer le ratio au niveau communal.
+
+### Récupérer et charger les fonds de carte
+
+Pour réaliser la cartographie, on a besoin de fichiers `shapefile` fournissant le fonds de carte. On peut par exemple récupérer les données sur le [site de l'IGN](https://geoservices.ign.fr/documentation/diffusion/telechargement-donnees-libres.html), mais il faudra prendre garde à deux points :
+
+* le premier, la géographie de référence. Malgré leur intitulé, les données du Recensement de Population 2016 sont au référentiel géographique 2018 ; il faut donc récupérer les cartes associées sur [ce lien](https://wxs.ign.fr/x02uy2aiwjo9bm8ce5plwqmr/telechargement/prepackage/ADMINEXPRESS-COG-PACK_2018-05-04%24ADMIN-EXPRESS-COG_1-1__SHP__FRA_2018-04-03/file/ADMIN-EXPRESS-COG_1-1__SHP__FRA_2018-04-03.7z) ;
+* une fois les données téléchargées, on constate qu'elles sont sous format `7z`. Ainsi, si l'on souhaite scripter en `R` la récupération de ces données, on va se heurter au fait que la fonction `unzip` de R-base ne prend pas en charge ce type de fichier. Pour cela, il faut utiliser le _package_ `archive` mis à disposition sous Github, pour lequel l'installation d'une librairie système peut être nécessaire.
+
+Le téléchargement et le chargement des fonds de cartes se réalisent donc de la manière suivante :
+
+```{r dl_cartes, warning = FALSE, collapse = TRUE}
+remotes::install_github("jimhester/archive")
+url <- "https://wxs.ign.fr/x02uy2aiwjo9bm8ce5plwqmr/telechargement/prepackage/ADMINEXPRESS-COG-PACK_2018-05-04%24ADMIN-EXPRESS-COG_1-1__SHP__FRA_2018-04-03/file/ADMIN-EXPRESS-COG_1-1__SHP__FRA_2018-04-03.7z"
+dir.create("cartes")
+download.file(url, destfile = "cartes/cartes_2018.7z")
+sapply(c("shp", "cpg", "dbf", "shx", "prj"), function(x) archive::archive_extract("cartes/cartes_2018.7z", dir = "cartes/",
+                                                                                  file = paste0("ADMIN-EXPRESS-COG_1-1__SHP__FRA_2018-04-03/ADMIN-EXPRESS-COG/1_DONNEES_LIVRAISON_2018-03-28/ADE-COG_1-1_SHP_LAMB93_FR/COMMUNE.", x)))
+
+commune <- rgdal::readOGR(dsn = "cartes/ADMIN-EXPRESS-COG_1-1__SHP__FRA_2018-04-03/ADMIN-EXPRESS-COG/1_DONNEES_LIVRAISON_2018-03-28/ADE-COG_1-1_SHP_LAMB93_FR",
+                          layer = "COMMUNE")
+```
+
+### Réaliser la cartographie
