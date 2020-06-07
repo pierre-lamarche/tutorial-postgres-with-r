@@ -194,7 +194,7 @@ Il faut éviter autant que possible de récupérer les données volumineuses dis
 
 Pour cela, on va se contenter de charger en mémoire un fragment de chaque table du schéma `rp2016` (une centaine de lignes) dont on va mesurer la taille en mémoire grâce à la fonction [`object.size`](https://www.rdocumentation.org/packages/utils/versions/3.6.2/topics/object.size) de `R`. Dans le même temps, on va collecter pour chaque table le nombre de lignes total, ce qui permettra ensuite d'inférer la taille totale de chaque table une fois celle-ci chargée en mémoire.
 
-```{r compute_size, exercise = TRUE}
+```{r compute_size, exercise = TRUE, exercise.timelimit = 120}
 library(DBI)
 connexion <- dbConnect(RPostgres::Postgres(),
                        host = "192.168.1.24",
@@ -246,15 +246,64 @@ Pour réaliser la cartographie, on a besoin de fichiers `shapefile` fournissant 
 Le téléchargement et le chargement des fonds de cartes se réalisent donc de la manière suivante :
 
 ```{r dl_cartes, warning = FALSE, collapse = TRUE}
+### installer le package archive
 remotes::install_github("jimhester/archive")
+### télécharger le fonds de cartes IGN en COG 2018
 url <- "https://wxs.ign.fr/x02uy2aiwjo9bm8ce5plwqmr/telechargement/prepackage/ADMINEXPRESS-COG-PACK_2018-05-04%24ADMIN-EXPRESS-COG_1-1__SHP__FRA_2018-04-03/file/ADMIN-EXPRESS-COG_1-1__SHP__FRA_2018-04-03.7z"
 dir.create("cartes")
 download.file(url, destfile = "cartes/cartes_2018.7z")
+### extraire les fichiers nécessaires au chargement du fonds de carte
 sapply(c("shp", "cpg", "dbf", "shx", "prj"), function(x) archive::archive_extract("cartes/cartes_2018.7z", dir = "cartes/",
                                                                                   file = paste0("ADMIN-EXPRESS-COG_1-1__SHP__FRA_2018-04-03/ADMIN-EXPRESS-COG/1_DONNEES_LIVRAISON_2018-03-28/ADE-COG_1-1_SHP_LAMB93_FR/COMMUNE.", x)))
-
+### charger le fonds de cartes dans un objet commune
 commune <- rgdal::readOGR(dsn = "cartes/ADMIN-EXPRESS-COG_1-1__SHP__FRA_2018-04-03/ADMIN-EXPRESS-COG/1_DONNEES_LIVRAISON_2018-03-28/ADE-COG_1-1_SHP_LAMB93_FR",
                           layer = "COMMUNE")
 ```
 
+On réalise un traitement équivalent pour récupérer également le contour du territoire métropolitain (aisément récupérable avec les fichiers GEOFLA de l'IGN) :
+
+```{r dl_bordures, warning = FALSE, collapse = TRUE}
+### télécharger le fonds de cartes IGN en COG 2018
+url <- "https://wxs.ign.fr/oikr5jryiph0iwhw36053ptm/telechargement/inspire/GEOFLA_THEME-COMMUNE_2016%24GEOFLA_2-2_COMMUNE_SHP_LAMB93_FXX_2016-06-28/file/GEOFLA_2-2_COMMUNE_SHP_LAMB93_FXX_2016-06-28.7z"
+download.file(url, destfile = "cartes/bordures.7z")
+### extraire les fichiers nécessaires au chargement du fonds de carte
+sapply(c("shp", "cpg", "dbf", "shx", "prj"), function(x) archive::archive_extract("cartes/bordures.7z", dir = "cartes/",
+                                                                                  file = paste0("GEOFLA_2-2_COMMUNE_SHP_LAMB93_FXX_2016-06-28/GEOFLA/1_DONNEES_LIVRAISON_2016-06-00236/GEOFLA_2-2_SHP_LAMB93_FR-ED161/COMMUNE/LIMITE_COMMUNE.", x)))
+### charger le fonds de cartes dans un objet commune
+bordure <- rgdal::readOGR(dsn = "cartes/GEOFLA_2-2_COMMUNE_SHP_LAMB93_FXX_2016-06-28/GEOFLA/1_DONNEES_LIVRAISON_2016-06-00236/GEOFLA_2-2_SHP_LAMB93_FR-ED161/COMMUNE",
+                          layer = "LIMITE_COMMUNE")
+bordure <- bordure[bordure@data$NATURE %in% c("Frontière internationale", "Limite côtière"), ]
+```
+
 ### Réaliser la cartographie
+
+```{r carto, exercise = TRUE, exercise.timelimit = 360}
+library(DBI)
+connexion <- dbConnect(RPostgres::Postgres(),
+                       host = "192.168.1.24",
+                       dbname = "rp",
+                       port = 5432,
+                       user = "user_read",
+                       password = "RP2016Insee")
+
+### création d'une table temporaire avec une indicatrice logement vacant et logement ordinaire
+dbSendQuery(connexion, "create temp table vacant as
+            select commune, case 
+              when catl = '4' then 1
+              else 0
+            end as vacant,
+            case
+              when catl in ('1', '2', '3', '4') then 1
+              else 0
+            end as logement
+            from rp2016.logement")
+### récupération de la somme par département de l'indicatrice
+compte <- dbGetQuery(connexion, "select distinct commune, sum(logement) as nb_logement, sum(vacant) as nb_vacant 
+                        from vacant group by commune")
+### calcul la proportion de logements vacants
+compte <- within(compte,
+                 tx_vacant <- nb_vacant/nb_logement*100)
+commune <- sp::merge(commune, compte, by.x = "INSEE_COM", by.y = "commune", all.x = TRUE)
+sp::spplot(commune, "tx_vacant", col = "transparent")
+plot(bordure, add = TRUE)
+```
