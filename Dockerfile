@@ -1,6 +1,6 @@
 FROM rocker/geospatial
 RUN apt-get update && apt-get install -y  git-core libcurl4-openssl-dev libssl-dev libxml2-dev make pandoc zlib1g-dev pandoc-citeproc libarchive-dev libudunits2-dev
-ENV PGRP_HOST
+ENV PGRP_HOST localhost
 RUN Rscript -e 'install.packages("learnr")'
 RUN Rscript -e 'remotes::install_github("pierre-lamarche/tutorial-postgres-with-r")'
 EXPOSE 8181
