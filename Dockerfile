@@ -1,4 +1,4 @@
-FROM rocker/verse
+FROM rocker/geospatial
 RUN apt-get update && apt-get install -y  git-core libcurl4-openssl-dev libssl-dev libxml2-dev make pandoc zlib1g-dev pandoc-citeproc libarchive-dev libudunits2-dev
 ENV PGRP_HOST
 RUN Rscript -e 'install.packages("learnr")'
