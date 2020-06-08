@@ -246,8 +246,6 @@ Pour réaliser la cartographie, on a besoin de fichiers `shapefile` fournissant 
 Le téléchargement et le chargement des fonds de cartes se réalisent donc de la manière suivante :
 
 ```{r dl_cartes, warning = FALSE, collapse = TRUE}
-### installer le package archive
-remotes::install_github("jimhester/archive")
 ### télécharger le fonds de cartes IGN en COG 2018
 url <- "https://wxs.ign.fr/x02uy2aiwjo9bm8ce5plwqmr/telechargement/prepackage/ADMINEXPRESS-COG-PACK_2018-05-04%24ADMIN-EXPRESS-COG_1-1__SHP__FRA_2018-04-03/file/ADMIN-EXPRESS-COG_1-1__SHP__FRA_2018-04-03.7z"
 dir.create("cartes")
