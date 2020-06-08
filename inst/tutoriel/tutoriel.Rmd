@@ -304,6 +304,6 @@ compte <- dbGetQuery(connexion, "select distinct commune, sum(logement) as nb_lo
 compte <- within(compte,
                  tx_vacant <- nb_vacant/nb_logement*100)
 commune <- sp::merge(commune, compte, by.x = "INSEE_COM", by.y = "commune", all.x = TRUE)
-sp::spplot(commune, "tx_vacant", col = "transparent")
-plot(bordure, add = TRUE)
+commune_sf <- sf::st_as_sf(commune)
+plot(commune_sf['tx_vacant'], border = FALSE)
 ```
