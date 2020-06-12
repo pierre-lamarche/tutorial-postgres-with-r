@@ -11,4 +11,5 @@ License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
 Imports: rmarkdown, knitr, learnr, rgdal, sp, DBI, RPostgres
+Remotes: jimhester/archive
 RoxygenNote: 7.1.0
